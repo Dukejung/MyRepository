@@ -1,5 +1,9 @@
+
 #include "fpga_api.h"
 #include <cstring>
+
+#include <iostream>
+
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/mman.h>
@@ -42,10 +46,13 @@ const float* __attribute__((optimize("O0"))) FPGA::run()
 
 void FPGA::largeMV(const float* large_mat, const float* input,
 		float* output, int M, int N)
-{
-    float* vec = this->vector(); //64
-    float* mat = this->matrix(); //64x64
- 
+{	 
+    float* vec = this->vector();
+    float* mat = this->matrix();
+    //vec[0] = 1;
+    memcpy(vec, input+0, sizeof(float));
+    return;
+   
     int N2 = ((N-1)/SIZE +1)*SIZE;
     int M2 = ((M-1)/SIZE +1)*SIZE;
     int vecindex = 0;
@@ -56,16 +63,12 @@ void FPGA::largeMV(const float* large_mat, const float* input,
        int smallindex = 0;
        int counter = 0;
        while(counter<SIZE*SIZE){
-         //do something
-         //matrix 0 case
-  //       std::cout<<"l+s "<<largeindex + smallindex << std::endl;
-//         std::cout<<"largeindex: " << largeindex << std::endl;
          if(largeindex + smallindex>=M*N){
-           mat[counter] = 0;
+           *(mat+counter) = 0;
          }else if((vecindex==M2/SIZE-1)&&(counter%SIZE>=(SIZE-(M2-M)))&&(M2!=M)){
-            mat[counter] = 0;           
+            *(mat+counter) = 0;           
          }else{
-           mat[counter] = large_mat[largeindex + smallindex]; 
+           *(mat+counter)= large_mat[largeindex + smallindex]; 
          }
 
          smallindex++;
@@ -77,20 +80,40 @@ void FPGA::largeMV(const float* large_mat, const float* input,
    for(int k=0;k<SIZE;k++){
        int inputindex = vecindex*SIZE+k;
        if(inputindex < M){
-         vec[k] = input[inputindex];
+         *(vec+k) = input[inputindex];
        }else{
-         vec[k] = 0;
+         *(vec+k) = 0;
        }
      }
    FPGA::run();         
    for(int k=0;k<SIZE;k++){
      int outputindex = matindex*SIZE+k;
      if(outputindex<N){
-       output[outputindex] += vec[k];
+       output[outputindex] += *(vec+k);
      }
      else break;
    } 
   }  
 } 
+                  
+/*  float* output2 = new float[N];
 
+
+
+  for (int i = 0; i < N; i++){
+ 	{
+		output2[i] = 0.0f;
+		for (int j = 0; j < M; j++)
+			output2[i] += input[j] * large_mat[M*i +j];
+                
+	}
+               //std::cout<<"output1: "<<output[i]<<std::endl;
+               //std::cout<<"output2: "<<output2[i]<<std::endl;
+               float diff = output[i]-output2[i];
+               std::cout<<"diff: "<<diff<<std::endl;
+            //   if((diff<0.00001)&&(diff>-0.00001)) continue;
+            //   else std::cout<<"diff: "<<diff<<std::endl;
+
+ }
+*/
 }

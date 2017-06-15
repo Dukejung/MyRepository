@@ -67,16 +67,12 @@ void FPGA::largeMV(const float* large_mat, const float* input,
        int smallindex = 0;
        int counter = 0;
        while(counter<SIZE*SIZE){
-         //do something
-         //matrix 0 case
-  //       std::cout<<"l+s "<<largeindex + smallindex << std::endl;
-//         std::cout<<"largeindex: " << largeindex << std::endl;
          if(largeindex + smallindex>=M*N){
            mat[counter] = 0;
          }else if((vecindex==M2/SIZE-1)&&(counter%SIZE>=(SIZE-(M2-M)))&&(M2!=M)){
             mat[counter] = 0;           
          }else{
-           mat[counter] = large_mat[largeindex + smallindex]; 
+           mat[counter]= large_mat[largeindex + smallindex]; 
          }
 
          smallindex++;
@@ -103,5 +99,5 @@ void FPGA::largeMV(const float* large_mat, const float* input,
    } 
   }  
 } 
- 
+
 }
